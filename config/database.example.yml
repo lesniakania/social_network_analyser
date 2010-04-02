@@ -1,5 +1,13 @@
-adapter: postgres
-host: localhost
-database: twitter_db
-user: postgres
-password: password
+development:
+  adapter: postgres
+  host: localhost
+  database: twitter_dev
+  user: postgres
+  password: password
+
+test:
+  adapter: postgres
+  host: localhost
+  database: twitter_test
+  user: postgres
+  password: password

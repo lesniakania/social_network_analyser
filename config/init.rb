@@ -5,7 +5,7 @@ rescue LoadError
   # Fall back on doing an unlocked resolve at runtime.
   require "rubygems"
   require "bundler"
-
+  
   require 'rake'
   require 'rake/clean'
   require 'rake/gempackagetask'
@@ -29,11 +29,3 @@ require 'sequel'
 module DataBase
   CONFIG = Yamler.load('./config/database.yml')
 end
-
-DB = Sequel.connect(
-  :adapter => DataBase::CONFIG['adapter'],
-  :host => DataBase::CONFIG['host'],
-  :database => DataBase::CONFIG['database'],
-  :user => DataBase::CONFIG['user'],
-  :password => DataBase::CONFIG['password']
-)
