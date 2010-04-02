@@ -3,4 +3,5 @@ vendor/gems
 vendor/specifications
 vendor/cache
 vendor/bin
+config/database.yml
 
