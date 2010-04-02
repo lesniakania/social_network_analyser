@@ -1,4 +1,4 @@
-require 'config/test'
+require 'config/environment/test'
 require 'social_network_analyser'
 
 describe SocialNetworkAnalyser do
