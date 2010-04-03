@@ -37,6 +37,3 @@ def clear_tables
   Twitt.delete
   User.delete
 end
-
-drop_tables
-create_tables
