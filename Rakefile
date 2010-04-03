@@ -26,7 +26,7 @@ Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_files.add(files)
   rdoc.main = "README" # page to start on
   rdoc.title = "social_network_analyser Docs"
-  rdoc.rdoc_dir = 'doc/rdoc' # rdoc output folder
+  rdoc.rdoc_dir = 'doc' # rdoc output folder
   rdoc.options << '--line-numbers'
 end
 
