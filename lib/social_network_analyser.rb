@@ -1,11 +1,11 @@
 class SocialNetworkAnalyser
   PageRankCoefficient = 0.85
 
-  # computes outdegree or indegree centrality depends on node_sym argument
-  # outdegree centrality requires <start node symbol> of your edge as node_sym
-  # indegree centrality requires <end node symbol> of your edge as node_sym
-  # <start node symbol> ---> <end node symbol>
-  # example:
+  # - Computes outdegree or indegree centrality depends on node_sym argument.
+  # - <b>outdegree centrality</b> requires <start node symbol> of your edge as node_sym.
+  # - <b>indegree centrality</b> requires <end node symbol> of your edge as node_sym.
+  # - <start node symbol> ---> <end node symbol>
+  #  example:
   #   table users contains nodes
   #   table user_followers contains edges
   #   edge is <follower> ---> <user>
@@ -15,6 +15,11 @@ class SocialNetworkAnalyser
     DB[edges_model_sym.to_sym].filter(node_sym.to_sym => node_id).count
   end
 
+  # page rank is compute according to equation
+  #  page_rank(x) = 1-d + d * (page_rank(y_1)/outdegree_centrality(y_1) + ... + page_rank(y_n)/outdegree_centrality(y_n))
+  #  where
+  #   d is page rank coefficient
+  #   y_1...y_n are start nodes from incomming x edges
   def self.page_rank(edges_model_sym, start_node_sym, end_node_sym, node_id)
     page_ranks = {}
     queue = [node_id]

@@ -132,14 +132,24 @@
         </div>
       
         <div class="method-description">
-          <p>
-computes outdegree or indegree centrality depends on node_sym argument
-outdegree centrality requires &lt;start node symbol&gt; of your edge as
-node_sym indegree centrality requires &lt;end node symbol&gt; of your edge
-as node_sym &lt;start node symbol&gt; &#8212;&gt; &lt;end node symbol&gt;
-example:
-</p>
+          <ul>
+<li>Computes outdegree or indegree centrality depends on node_sym argument.
+
+</li>
+<li><b>outdegree centrality</b> requires &lt;start node symbol&gt; of your edge
+as node_sym.
+
+</li>
+<li><b>indegree centrality</b> requires &lt;end node symbol&gt; of your edge as
+node_sym.
+
+</li>
+<li>&lt;start node symbol&gt; &#8212;&gt; &lt;end node symbol&gt;
+
+</li>
+</ul>
 <pre>
+ example:
   table users contains nodes
   table user_followers contains edges
   edge is &lt;follower&gt; ---&gt; &lt;user&gt;
@@ -169,49 +179,58 @@ example:
         </div>
       
         <div class="method-description">
+          <p>
+page rank is compute according to equation
+</p>
+<pre>
+ page_rank(x) = 1-d + d * (page_rank(y_1)/outdegree_centrality(y_1) + ... + page_rank(y_n)/outdegree_centrality(y_n))
+ where
+  d is page rank coefficient
+  y_1...y_n are start nodes from incomming x edges
+</pre>
           <p><a class="source-toggle" href="#"
             onclick="toggleCode('M000002-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000002-source">
 <pre>
-    <span class="ruby-comment cmt"># File lib/social_network_analyser.rb, line 18</span>
-18:   <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">page_rank</span>(<span class="ruby-identifier">edges_model_sym</span>, <span class="ruby-identifier">start_node_sym</span>, <span class="ruby-identifier">end_node_sym</span>, <span class="ruby-identifier">node_id</span>)
-19:     <span class="ruby-identifier">page_ranks</span> = {}
-20:     <span class="ruby-identifier">queue</span> = [<span class="ruby-identifier">node_id</span>]
-21: 
-22:     <span class="ruby-keyword kw">while</span> <span class="ruby-operator">!</span><span class="ruby-identifier">queue</span>.<span class="ruby-identifier">empty?</span>
-23:       <span class="ruby-identifier">node_id</span> = <span class="ruby-identifier">queue</span>.<span class="ruby-identifier">shift</span>
-24:       <span class="ruby-identifier">neighbour_ids</span> = <span class="ruby-constant">DB</span>[<span class="ruby-identifier">edges_model_sym</span>.<span class="ruby-identifier">to_sym</span>].<span class="ruby-identifier">filter</span>(<span class="ruby-identifier">end_node_sym</span>.<span class="ruby-identifier">to_sym</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">node_id</span>).<span class="ruby-identifier">map</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">n</span><span class="ruby-operator">|</span> <span class="ruby-identifier">n</span>[<span class="ruby-identifier">start_node_sym</span>.<span class="ruby-identifier">to_sym</span>] }.
-25:         <span class="ruby-identifier">select</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">n</span><span class="ruby-operator">|</span> <span class="ruby-operator">!</span><span class="ruby-identifier">queue</span>.<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">n</span>) }
+    <span class="ruby-comment cmt"># File lib/social_network_analyser.rb, line 23</span>
+23:   <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">page_rank</span>(<span class="ruby-identifier">edges_model_sym</span>, <span class="ruby-identifier">start_node_sym</span>, <span class="ruby-identifier">end_node_sym</span>, <span class="ruby-identifier">node_id</span>)
+24:     <span class="ruby-identifier">page_ranks</span> = {}
+25:     <span class="ruby-identifier">queue</span> = [<span class="ruby-identifier">node_id</span>]
 26: 
-27:       <span class="ruby-identifier">node_id</span>.<span class="ruby-identifier">to_s</span> <span class="ruby-operator">+</span> <span class="ruby-value str">&quot; &quot;</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">neighbour_ids</span>.<span class="ruby-identifier">to_s</span>
-28:       <span class="ruby-keyword kw">if</span> <span class="ruby-operator">!</span><span class="ruby-identifier">neighbour_ids</span>.<span class="ruby-identifier">empty?</span>
-29:         <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">neighbour_ids</span>.<span class="ruby-identifier">all?</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">neighbour_id</span><span class="ruby-operator">|</span> <span class="ruby-identifier">page_ranks</span>[<span class="ruby-identifier">neighbour_id</span>] }
-30:           <span class="ruby-identifier">sum</span> = <span class="ruby-value">0</span>
-31:           <span class="ruby-identifier">neighbour_ids</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">neighbour_id</span><span class="ruby-operator">|</span>
-32:             <span class="ruby-identifier">outdegree_centrality</span> = <span class="ruby-identifier">degree_centrality</span>(<span class="ruby-identifier">edges_model_sym</span>, <span class="ruby-identifier">start_node_sym</span>, <span class="ruby-identifier">neighbour_id</span>)
-33:             <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">outdegree_centrality</span> <span class="ruby-operator">!=</span> <span class="ruby-value">0</span>
-34:               <span class="ruby-identifier">sum</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">page_ranks</span>[<span class="ruby-identifier">neighbour_id</span>]<span class="ruby-operator">/</span><span class="ruby-identifier">outdegree_centrality</span>.<span class="ruby-identifier">to_f</span>
-35:             <span class="ruby-keyword kw">else</span>
-36:               <span class="ruby-identifier">sum</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">page_ranks</span>[<span class="ruby-identifier">neighbour_id</span>]
-37:             <span class="ruby-keyword kw">end</span>
-38:           <span class="ruby-keyword kw">end</span>
-39:           <span class="ruby-identifier">page_ranks</span>[<span class="ruby-identifier">node_id</span>] = (<span class="ruby-value">1</span><span class="ruby-operator">-</span><span class="ruby-constant">PageRankCoefficient</span>) <span class="ruby-operator">+</span> <span class="ruby-constant">PageRankCoefficient</span><span class="ruby-operator">*</span><span class="ruby-identifier">sum</span>
-40:         <span class="ruby-keyword kw">else</span>
-41:           <span class="ruby-identifier">queue</span>.<span class="ruby-identifier">unshift</span>(<span class="ruby-identifier">node_id</span>)
-42:           <span class="ruby-identifier">queue</span> = <span class="ruby-identifier">neighbour_ids</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">queue</span>
-43:         <span class="ruby-keyword kw">end</span>
-44:       <span class="ruby-keyword kw">else</span>
-45:         <span class="ruby-identifier">outdegree_centrality</span> = <span class="ruby-identifier">degree_centrality</span>(<span class="ruby-identifier">edges_model_sym</span>, <span class="ruby-identifier">start_node_sym</span>, <span class="ruby-identifier">node_id</span>)
-46:         <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">outdegree_centrality</span> <span class="ruby-operator">!=</span> <span class="ruby-value">0</span>
-47:           <span class="ruby-identifier">page_ranks</span>[<span class="ruby-identifier">node_id</span>] = (<span class="ruby-value">1</span><span class="ruby-operator">-</span><span class="ruby-constant">PageRankCoefficient</span>) <span class="ruby-operator">+</span> <span class="ruby-identifier">neighbour_ids</span>.<span class="ruby-identifier">count</span><span class="ruby-operator">/</span><span class="ruby-identifier">outdegree_centrality</span>.<span class="ruby-identifier">to_f</span>
-48:         <span class="ruby-keyword kw">else</span>
-49:           <span class="ruby-identifier">page_ranks</span>[<span class="ruby-identifier">node_id</span>] = (<span class="ruby-value">1</span><span class="ruby-operator">-</span><span class="ruby-constant">PageRankCoefficient</span>) <span class="ruby-operator">+</span> <span class="ruby-identifier">neighbour_ids</span>.<span class="ruby-identifier">count</span>
-50:         <span class="ruby-keyword kw">end</span>
-51:       <span class="ruby-keyword kw">end</span>
-52:     <span class="ruby-keyword kw">end</span>
-53: 
-54:     <span class="ruby-identifier">page_ranks</span>[<span class="ruby-identifier">node_id</span>]
-55:   <span class="ruby-keyword kw">end</span>
+27:     <span class="ruby-keyword kw">while</span> <span class="ruby-operator">!</span><span class="ruby-identifier">queue</span>.<span class="ruby-identifier">empty?</span>
+28:       <span class="ruby-identifier">node_id</span> = <span class="ruby-identifier">queue</span>.<span class="ruby-identifier">shift</span>
+29:       <span class="ruby-identifier">neighbour_ids</span> = <span class="ruby-constant">DB</span>[<span class="ruby-identifier">edges_model_sym</span>.<span class="ruby-identifier">to_sym</span>].<span class="ruby-identifier">filter</span>(<span class="ruby-identifier">end_node_sym</span>.<span class="ruby-identifier">to_sym</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">node_id</span>).<span class="ruby-identifier">map</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">n</span><span class="ruby-operator">|</span> <span class="ruby-identifier">n</span>[<span class="ruby-identifier">start_node_sym</span>.<span class="ruby-identifier">to_sym</span>] }.
+30:         <span class="ruby-identifier">select</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">n</span><span class="ruby-operator">|</span> <span class="ruby-operator">!</span><span class="ruby-identifier">queue</span>.<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">n</span>) }
+31: 
+32:       <span class="ruby-identifier">node_id</span>.<span class="ruby-identifier">to_s</span> <span class="ruby-operator">+</span> <span class="ruby-value str">&quot; &quot;</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">neighbour_ids</span>.<span class="ruby-identifier">to_s</span>
+33:       <span class="ruby-keyword kw">if</span> <span class="ruby-operator">!</span><span class="ruby-identifier">neighbour_ids</span>.<span class="ruby-identifier">empty?</span>
+34:         <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">neighbour_ids</span>.<span class="ruby-identifier">all?</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">neighbour_id</span><span class="ruby-operator">|</span> <span class="ruby-identifier">page_ranks</span>[<span class="ruby-identifier">neighbour_id</span>] }
+35:           <span class="ruby-identifier">sum</span> = <span class="ruby-value">0</span>
+36:           <span class="ruby-identifier">neighbour_ids</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">neighbour_id</span><span class="ruby-operator">|</span>
+37:             <span class="ruby-identifier">outdegree_centrality</span> = <span class="ruby-identifier">degree_centrality</span>(<span class="ruby-identifier">edges_model_sym</span>, <span class="ruby-identifier">start_node_sym</span>, <span class="ruby-identifier">neighbour_id</span>)
+38:             <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">outdegree_centrality</span> <span class="ruby-operator">!=</span> <span class="ruby-value">0</span>
+39:               <span class="ruby-identifier">sum</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">page_ranks</span>[<span class="ruby-identifier">neighbour_id</span>]<span class="ruby-operator">/</span><span class="ruby-identifier">outdegree_centrality</span>.<span class="ruby-identifier">to_f</span>
+40:             <span class="ruby-keyword kw">else</span>
+41:               <span class="ruby-identifier">sum</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">page_ranks</span>[<span class="ruby-identifier">neighbour_id</span>]
+42:             <span class="ruby-keyword kw">end</span>
+43:           <span class="ruby-keyword kw">end</span>
+44:           <span class="ruby-identifier">page_ranks</span>[<span class="ruby-identifier">node_id</span>] = (<span class="ruby-value">1</span><span class="ruby-operator">-</span><span class="ruby-constant">PageRankCoefficient</span>) <span class="ruby-operator">+</span> <span class="ruby-constant">PageRankCoefficient</span><span class="ruby-operator">*</span><span class="ruby-identifier">sum</span>
+45:         <span class="ruby-keyword kw">else</span>
+46:           <span class="ruby-identifier">queue</span>.<span class="ruby-identifier">unshift</span>(<span class="ruby-identifier">node_id</span>)
+47:           <span class="ruby-identifier">queue</span> = <span class="ruby-identifier">neighbour_ids</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">queue</span>
+48:         <span class="ruby-keyword kw">end</span>
+49:       <span class="ruby-keyword kw">else</span>
+50:         <span class="ruby-identifier">outdegree_centrality</span> = <span class="ruby-identifier">degree_centrality</span>(<span class="ruby-identifier">edges_model_sym</span>, <span class="ruby-identifier">start_node_sym</span>, <span class="ruby-identifier">node_id</span>)
+51:         <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">outdegree_centrality</span> <span class="ruby-operator">!=</span> <span class="ruby-value">0</span>
+52:           <span class="ruby-identifier">page_ranks</span>[<span class="ruby-identifier">node_id</span>] = (<span class="ruby-value">1</span><span class="ruby-operator">-</span><span class="ruby-constant">PageRankCoefficient</span>) <span class="ruby-operator">+</span> <span class="ruby-identifier">neighbour_ids</span>.<span class="ruby-identifier">count</span><span class="ruby-operator">/</span><span class="ruby-identifier">outdegree_centrality</span>.<span class="ruby-identifier">to_f</span>
+53:         <span class="ruby-keyword kw">else</span>
+54:           <span class="ruby-identifier">page_ranks</span>[<span class="ruby-identifier">node_id</span>] = (<span class="ruby-value">1</span><span class="ruby-operator">-</span><span class="ruby-constant">PageRankCoefficient</span>) <span class="ruby-operator">+</span> <span class="ruby-identifier">neighbour_ids</span>.<span class="ruby-identifier">count</span>
+55:         <span class="ruby-keyword kw">end</span>
+56:       <span class="ruby-keyword kw">end</span>
+57:     <span class="ruby-keyword kw">end</span>
+58: 
+59:     <span class="ruby-identifier">page_ranks</span>[<span class="ruby-identifier">node_id</span>]
+60:   <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
         </div>
