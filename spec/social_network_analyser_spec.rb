@@ -1,3 +1,4 @@
+require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 require 'social_network_analyser'
 
 describe SocialNetworkAnalyser do
@@ -46,6 +47,27 @@ describe SocialNetworkAnalyser do
 
       SocialNetworkAnalyser.betweenness_centrality(:users, :id, :user_followers, :follower_id, :user_id, @user_ids[1]).should == 3
       SocialNetworkAnalyser.betweenness_centrality(:users, :id, :user_followers, :follower_id, :user_id, @user_ids[4]).should == 1
+    end
+  end
+
+  describe "centrality based on dijkstra alghoritm" do
+    before(:each) do
+      DB[:user_followers].insert(:follower_id => @user_ids[0], :user_id => @user_ids[1])
+      DB[:user_followers].insert(:follower_id => @user_ids[0], :user_id => @user_ids[2])
+      DB[:user_followers].insert(:follower_id => @user_ids[2], :user_id => @user_ids[3])
+      DB[:user_followers].insert(:follower_id => @user_ids[3], :user_id => @user_ids[4])
+    end
+
+    describe "closeness centrality" do
+      it "should compute closeness centrality properly" do
+        SocialNetworkAnalyser.closeness_centrality(@user_ids[0], :users, :id, :user_followers, :follower_id, :user_id).should == 1.0/7
+      end
+    end
+
+    describe "graph centrality" do
+      it "should compute graph centrality properly" do
+        SocialNetworkAnalyser.graph_centrality(@user_ids[0], :users, :id, :user_followers, :follower_id, :user_id).should == 1.0/3
+      end
     end
   end
 end

@@ -1,7 +1,7 @@
 class SocialNetworkAnalyser
   PageRankCoefficient = 0.85
 
-  # Computes outdegree or indegree centrality depends on node_sym argument (start node symbol for outdegree, end node symbol for indegree).
+  # Computes outdegree or indegree centrality depending on node_sym argument (start node symbol for outdegree, end node symbol for indegree).
   #
   #   +-------+     +-----------------------+
   #   | users |     |     user_followers    |
@@ -120,5 +120,29 @@ class SocialNetworkAnalyser
       end
     end
     betweenness[node_id]
+  end
+
+  # Computes closeness centrality according to equation
+  #   closeness_centrality(x) = 1/(d(x,t1) + ... + d(x,tn))
+  #
+  #   where
+  #   d(x,y) is the shortest distance from x to y
+  def self.closeness_centrality(node_id, nodes_model_sym, node_id_sym, edges_model_sym, start_node_sym, end_node_sym, weight_sym=nil)
+    nodes = DB[nodes_model_sym.to_sym].map { |n| n[node_id_sym.to_sym] }
+    edges = DB[edges_model_sym.to_sym].map { |e| [e[start_node_sym.to_sym], e[end_node_sym.to_sym], weight_sym ? e[weight_sym.to_sym] : 1] }
+    g = Graph.new(nodes, edges)
+    1.0/Algorithms.dijkstra(g, node_id).values.inject(0) { |sum, d| sum+d }
+  end
+
+  # Computes closeness centrality according to equation
+  #   graph_centrality(x) = 1/max(d(x,t1),...,d(x,tn))
+  #
+  #   where
+  #   d(x,y) is the shortest distance from x to y
+  def self.graph_centrality(node_id, nodes_model_sym, node_id_sym, edges_model_sym, start_node_sym, end_node_sym, weight_sym=nil)
+    nodes = DB[nodes_model_sym.to_sym].map { |n| n[node_id_sym.to_sym] }
+    edges = DB[edges_model_sym.to_sym].map { |e| [e[start_node_sym.to_sym], e[end_node_sym.to_sym], weight_sym ? e[weight_sym.to_sym] : 1] }
+    g = Graph.new(nodes, edges)
+    1.0/Algorithms.dijkstra(g, node_id).values.max
   end
 end
