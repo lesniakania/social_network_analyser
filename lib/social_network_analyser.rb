@@ -18,8 +18,12 @@ class SocialNetworkAnalyser
   #   SocialNetworkAnalyser.degree_centrality(:user_followers, :user_id, 1) #=> 3
   #   # outdegree_centrality
   #   SocialNetworkAnalyser.degree_centrality(:user_followers, :follower_id, 3) #=> 2
-  def self.degree_centrality(edges_model_sym, node_sym, node_id)
-    DB[edges_model_sym.to_sym].filter(node_sym.to_sym => node_id).count
+  def self.indegree_centrality(graph, src_id)
+    graph.edges.select { |e| e.v_end == src_id }.size
+  end
+
+  def self.outdegree_centrality(graph, src_id)
+    graph.edges.select { |e| e.v_start == src_id }.size
   end
 
   # Computes page rank according to equation
@@ -28,21 +32,19 @@ class SocialNetworkAnalyser
   #   where
   #   d is page rank coefficient
   #   y_1...y_n are start nodes from incomming x edges
-  def self.page_rank(edges_model_sym, start_node_sym, end_node_sym, node_id)
+  def self.page_rank(graph, src_id)
     page_ranks = {}
-    queue = [node_id]
+    queue = [src_id]
 
     while !queue.empty?
       node_id = queue.shift
-      neighbour_ids = DB[edges_model_sym.to_sym].filter(end_node_sym.to_sym => node_id).map { |n| n[start_node_sym.to_sym] }.
-        select { |n| !queue.include?(n) }
+      neighbour_ids = graph.edges.select { |e| e.v_end == node_id }.map { |e| e.v_start }.select { |n| !queue.include?(n) }
 
-      node_id.to_s + " " + neighbour_ids.to_s
       if !neighbour_ids.empty?
         if neighbour_ids.all? { |neighbour_id| page_ranks[neighbour_id] }
           sum = 0
           neighbour_ids.each do |neighbour_id|
-            outdegree_centrality = degree_centrality(edges_model_sym, start_node_sym, neighbour_id)
+            outdegree_centrality = outdegree_centrality(graph, neighbour_id)
             if outdegree_centrality != 0
               sum += page_ranks[neighbour_id]/outdegree_centrality.to_f
             else
@@ -55,7 +57,7 @@ class SocialNetworkAnalyser
           queue = neighbour_ids + queue
         end
       else
-        outdegree_centrality = degree_centrality(edges_model_sym, start_node_sym, node_id)
+        outdegree_centrality = outdegree_centrality(graph, node_id)
         if outdegree_centrality != 0
           page_ranks[node_id] = (1-PageRankCoefficient) + neighbour_ids.count/outdegree_centrality.to_f
         else
@@ -64,7 +66,7 @@ class SocialNetworkAnalyser
       end
     end
 
-    page_ranks[node_id]
+    page_ranks[src_id]
   end
 
   # Computes betweenness centrality according to equation
@@ -73,19 +75,19 @@ class SocialNetworkAnalyser
   #   where
   #   q_s_t(x) is the number of shortest paths from s to t that x lies on
   #   q_s_t is the number of shortes paths from s to t
-  def self.betweenness_centrality(nodes_model_sym, node_id_sym, edges_model_sym, start_node_sym, end_node_sym, node_id)
+  def self.betweenness_centrality(graph, src_id)
     betweenness = {}
     fi = {}
-    DB[nodes_model_sym.to_sym].map { |n| n[node_id_sym.to_sym] }.each do |n_id|
+    graph.nodes.map { |n| n.id }.each do |n_id|
       betweenness[n_id] = 0.0
       fi[n_id] = 0.0
     end
-    DB[nodes_model_sym.to_sym].map { |n| n[node_id_sym.to_sym] }.each do |s_id|
+    graph.nodes.map { |n| n.id }.each do |s_id|
       stack = []
       p = {}
       q = {}
       d = {}
-      DB[nodes_model_sym.to_sym].map { |n| n[node_id_sym.to_sym] }.each do |w_id|
+      graph.nodes.map { |n| n.id }.each do |w_id|
         p[w_id] = []
         q[w_id] = 0.0
         d[w_id] = -1.0
@@ -96,7 +98,7 @@ class SocialNetworkAnalyser
       while !queue.empty?
         v_id = queue.shift
         stack.push(v_id)
-        DB[edges_model_sym.to_sym].filter(start_node_sym.to_sym => v_id).map { |n| n[end_node_sym.to_sym] }.each do |w_id|
+        graph.edges.select { |e| e.v_start == v_id }.map { |e| e.v_end }.each do |w_id|
           # w found for the first time?
           if d[w_id]<0
             queue << w_id
@@ -119,7 +121,7 @@ class SocialNetworkAnalyser
         end
       end
     end
-    betweenness[node_id]
+    betweenness[src_id]
   end
 
   # Computes closeness centrality according to equation
@@ -127,11 +129,8 @@ class SocialNetworkAnalyser
   #
   #   where
   #   d(x,y) is the shortest distance from x to y
-  def self.closeness_centrality(node_id, nodes_model_sym, node_id_sym, edges_model_sym, start_node_sym, end_node_sym, weight_sym=nil)
-    nodes = DB[nodes_model_sym.to_sym].map { |n| n[node_id_sym.to_sym] }
-    edges = DB[edges_model_sym.to_sym].map { |e| [e[start_node_sym.to_sym], e[end_node_sym.to_sym], weight_sym ? e[weight_sym.to_sym] : 1] }
-    g = Graph.new(nodes, edges)
-    1.0/Algorithms.dijkstra(g, node_id).values.inject(0) { |sum, d| sum+d }
+  def self.closeness_centrality(graph, src_id)
+    1.0/Algorithms.dijkstra(graph, src_id).values.inject(0) { |sum, d| sum+d }
   end
 
   # Computes closeness centrality according to equation
@@ -139,10 +138,7 @@ class SocialNetworkAnalyser
   #
   #   where
   #   d(x,y) is the shortest distance from x to y
-  def self.graph_centrality(node_id, nodes_model_sym, node_id_sym, edges_model_sym, start_node_sym, end_node_sym, weight_sym=nil)
-    nodes = DB[nodes_model_sym.to_sym].map { |n| n[node_id_sym.to_sym] }
-    edges = DB[edges_model_sym.to_sym].map { |e| [e[start_node_sym.to_sym], e[end_node_sym.to_sym], weight_sym ? e[weight_sym.to_sym] : 1] }
-    g = Graph.new(nodes, edges)
-    1.0/Algorithms.dijkstra(g, node_id).values.max
+  def self.graph_centrality(graph, src_id)
+    1.0/Algorithms.dijkstra(graph, src_id).values.max
   end
 end
