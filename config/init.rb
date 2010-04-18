@@ -23,9 +23,3 @@ end
 # Bundler.require
 
 require 'spec/rake/spectask'
-require 'yamler'
-require 'sequel'
-
-module DataBase
-  CONFIG = Yamler.load('./config/database.yml')
-end
