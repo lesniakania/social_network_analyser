@@ -1,3 +1,5 @@
+require 'config/init'
+
 class SocialNetworkAnalyser
   PageRankCoefficient = 0.85
 
@@ -154,7 +156,6 @@ class SocialNetworkAnalyser
   end
 
   # Computes betweenness centrality for edge. The same as above but with edge.
-  # TODO check if it works fine
   def self.edge_betweenness_centrality(graph)
     betweenness = betweenness_centrality(graph)
     edge_betweenness = {}
