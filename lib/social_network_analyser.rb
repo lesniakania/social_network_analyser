@@ -101,11 +101,9 @@ class SocialNetworkAnalyser
   # TODO check if it works fine
   def self.betweenness_centrality(graph)
     betweenness = {}
-    fi = {}
-    node_ids = graph.nodes.keys.sort
+    node_ids = graph.nodes.keys
     node_ids.each do |n_id|
       betweenness[n_id] = 0.0
-      fi[n_id] = 0.0
     end
     node_ids.each do |s_id|
       stack = []
@@ -136,6 +134,12 @@ class SocialNetworkAnalyser
           end
         end
       end
+
+      fi = {}
+      node_ids.each do |n_id|
+        fi[n_id] = 0.0
+      end
+
       while !stack.empty?
         w_id = stack.pop
         p[w_id].each do |v_id|

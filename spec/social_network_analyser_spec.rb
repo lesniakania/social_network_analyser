@@ -6,12 +6,12 @@ require 'graph'
 
 describe SocialNetworkAnalyser do
   before(:each) do
-    @nodes = (1..5).map { |id| Node.new(id) }
+    @nodes = (0..4).map { |id| Node.new(id) }
   end
 
   describe "degree centrality" do
     it "should compute outdegree centrality properly" do
-      src = Node.new(6)
+      src = Node.new(5)
       edges = []
       @nodes.each { |n| edges << Edge.new(src, n) }
       @nodes << src
@@ -20,7 +20,7 @@ describe SocialNetworkAnalyser do
     end
     
     it "should compute indegree centrality properly" do
-      src = Node.new(6)
+      src = Node.new(5)
       edges = []
       @nodes.each { |n| edges << Edge.new(n, src) }
       @nodes << src
@@ -46,7 +46,7 @@ describe SocialNetworkAnalyser do
 
   describe "betweenness centrality" do
     it "should compute betweenness centrality properly" do
-      (6..7).each { |id| @nodes << Node.new(id) }
+      (5..6).each { |id| @nodes << Node.new(id) }
       edges = []
       edges << Edge.new(@nodes[0], @nodes[1])
       edges << Edge.new(@nodes[1], @nodes[2])
@@ -60,8 +60,8 @@ describe SocialNetworkAnalyser do
       betweenness = SocialNetworkAnalyser.betweenness_centrality(graph)
       betweenness[@nodes[1].id].should == 3
       betweenness[@nodes[4].id].should == 1
-
-      nodes = (1..3).map { |id| Node.new(id) }
+      
+      nodes = (0..2).map { |id| Node.new(id) }
       edges = []
       edges << Edge.new(nodes[1], nodes[0])
       edges << Edge.new(nodes[0], nodes[2])
