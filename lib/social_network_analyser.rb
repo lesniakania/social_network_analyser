@@ -213,15 +213,15 @@ class SocialNetworkAnalyser
   #
   #   SocialNetworkAnalyser.detect_communities(graph, :weak_community) #=> graph
   def self.detect_communities(graph, community_definition_sym)
+    graph = graph.dup
     return graph if graph.edges.empty?
     
-    graph = graph.dup
     edge_betweenness = edge_betweenness_centrality(graph)
     max_betweenness = edge_betweenness.max { |a,b| a[1] <=> b[1] }.last
 
     deleted_edges = []
     graph.edges.delete_if do |e_id, e|
-      deleted_edges << e
+      deleted_edges << e if edge_betweenness[e_id] == max_betweenness
       edge_betweenness[e_id] == max_betweenness
     end
 
@@ -255,6 +255,7 @@ class SocialNetworkAnalyser
     else
       detect_communities(graph, community_definition_sym)
     end
+    graph
   end
 
   protected
