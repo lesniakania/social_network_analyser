@@ -2,13 +2,13 @@ require 'config/init.rb'
 
 spec = Gem::Specification.new do |s|
   s.name = 'social_network_analyser'
-  s.version = '0.0.1'
+  s.version = '0.0.2'
   s.has_rdoc = true
   s.extra_rdoc_files = ['README', 'LICENSE']
-  s.summary = 'Your summary here'
+  s.summary = 'provides useful functions to analize social networks'
   s.description = s.summary
-  s.author = ''
-  s.email = ''
+  s.author = 'Anna Leśniak'
+  s.email = 'lesniakania@gmail.com'
   # s.executables = ['your_executable_here']
   s.files = %w(LICENSE README Rakefile) + Dir.glob("{bin,lib,spec}/**/*")
   s.require_path = "lib"

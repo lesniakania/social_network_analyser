@@ -1,9 +1,0 @@
-Social Network Analyser
-
-provides useful functions to analize social networks
-
-
-sudo gem install bundler
-bundle install
-
-require 'lib/social_network_analyser'

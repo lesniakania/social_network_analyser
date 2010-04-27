@@ -1,4 +1,5 @@
 require 'config/init'
+require 'algorithms'
 
 class SocialNetworkAnalyser
   PageRankCoefficient = 0.85
