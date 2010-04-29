@@ -270,9 +270,7 @@ class SocialNetworkAnalyser
         if d < Algorithms::Infinity
           nodes << graph.nodes[n_id]
         end
-        nodes.each do |n|
-          edges += graph.edges.values.select { |e| e.v_start.id == n.id || e.v_end.id == n.id }
-        end
+        edges += graph.edges.values.select { |e| nodes.include?(e.v_start.id) && nodes.include?(e.v_end.id) }
       end
       Graph.new(nodes, edges)
     else
