@@ -109,7 +109,7 @@ describe SocialNetworkAnalyser do
       edges << Edge.new(nodes[4], nodes[5])
       edges << Edge.new(nodes[5], nodes[4])
       graph = Graph.new(nodes, edges)
-      community = SocialNetworkAnalyser.detect_communities(graph, :weak_community)
+      community = SocialNetworkAnalyser.detect_communities!(graph, :weak_community)
       community.subgraphs.map { |s| s.nodes.keys }.should == [[5, 3, 4], [0, 1, 2]]
     end
   end

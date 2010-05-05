@@ -101,7 +101,6 @@ class SocialNetworkAnalyser
   #   graph = Graph.new(nodes, edges)
   #   
   #   SocialNetworkAnalyser.betweenness_centrality(graph) #=> {5=>1.0, 6=>6.0, 1=>0.0, 7=>0.0, 2=>3.0, 3=>3.0, 4=>0.0}
-  # TODO check if it works fine
   def self.betweenness_centrality(graph)
     betweenness = {}
     node_ids = graph.nodes.keys
@@ -213,48 +212,47 @@ class SocialNetworkAnalyser
   #   graph = Graph.new(nodes, edges)
   #
   #   SocialNetworkAnalyser.detect_communities(graph, :weak_community) #=> graph
-  def self.detect_communities(graph, community_definition_sym)
-    graph = graph.dup
-    return graph if graph.edges.empty?
-    
-    edge_betweenness = edge_betweenness_centrality(graph)
-    max_betweenness = edge_betweenness.max { |a,b| a[1] <=> b[1] }.last
+  def self.detect_communities!(graph, community_definition_sym=nil)
+    unless graph.edges.empty?
+      edge_betweenness = edge_betweenness_centrality(graph)
+      max_betweenness = edge_betweenness.max { |a,b| a[1] <=> b[1] }.last
 
-    deleted_edges = []
-    graph.edges.delete_if do |e_id, e|
-      deleted_edges << e if edge_betweenness[e_id] == max_betweenness
-      edge_betweenness[e_id] == max_betweenness
-    end
-
-    subgraphs = []
-    deleted_edges.each do |edge|
-      # increment out of subgraph degree
-      edge.v_start.k_out += 1
-      edge.v_end.k_out += 1
-
-      [edge.v_start.id, edge.v_end.id].each do |node_id|
-        if (subgraph = create_subgraph(graph, node_id)) && !subgraphs.include?(subgraph)
-          subgraphs << subgraph
-        end
-      end
-    end
-
-    if subgraphs.count { |s| s.send(:"#{community_definition_sym.to_s}?") } >= 2
-      subgraphs.each do |subgraph|
-        subgraph.nodes.each do |n_id, n|
-          graph.nodes.delete(n_id)
-        end
-        subgraph.edges.each do |e_id, e|
-          graph.edges.delete(e_id)
-        end
-        graph.add_subgraph(subgraph)
+      deleted_edges = []
+      graph.edges.delete_if do |e_id, e|
+        deleted_edges << e if edge_betweenness[e_id] == max_betweenness
+        edge_betweenness[e_id] == max_betweenness
       end
 
-      subgraphs.each do |subgraph|
-        detect_communities(subgraph, community_definition_sym)
+      subgraphs = []
+      deleted_edges.each do |edge|
+        # increment out of subgraph degree
+        edge.v_start.k_out += 1
+        edge.v_end.k_out += 1
+
+        [edge.v_start.id, edge.v_end.id].each do |node_id|
+          if (subgraph = create_subgraph(graph, node_id)) && !subgraphs.include?(subgraph)
+            subgraphs << subgraph
+          end
+        end
       end
-    else
-      detect_communities(graph, community_definition_sym)
+
+      if (!community_definition_sym && subgraphs.size >= 2) || (community_definition_sym && subgraphs.count { |s| s.send(:"#{community_definition_sym.to_s}?") } >= 2)
+        subgraphs.each do |subgraph|
+          subgraph.nodes.each do |n_id, n|
+            graph.nodes.delete(n_id)
+          end
+          subgraph.edges.each do |e_id, e|
+            graph.edges.delete(e_id)
+          end
+          graph.add_subgraph(subgraph)
+        end
+
+        subgraphs.each do |subgraph|
+          detect_communities!(subgraph, community_definition_sym)
+        end
+      else
+        detect_communities!(graph, community_definition_sym)
+      end
     end
     graph
   end
@@ -271,7 +269,7 @@ class SocialNetworkAnalyser
         end
       end
       nodes_ids = nodes.map { |n| n.id }
-      edges = graph.edges.values.select { |e| e.v_end.id; nodes_ids.include?(e.v_start.id) && nodes_ids.include?(e.v_end.id) }
+      edges = graph.edges.values.select { |e| nodes_ids.include?(e.v_start.id) && nodes_ids.include?(e.v_end.id) }
       Graph.new(nodes, edges)
     else
       false

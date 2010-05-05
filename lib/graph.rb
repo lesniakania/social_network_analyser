@@ -1,7 +1,7 @@
 require 'social_network_analyser'
 
 class Graph
-  attr_accessor :id, :nodes, :edges, :subgraphs
+  attr_accessor :id, :nodes, :edges, :subgraphs, :strength
 
   def initialize(nodes, edges)
     self.nodes = {}
@@ -12,8 +12,9 @@ class Graph
     edges.each do |e|
       self.edges[e.id] = e
     end
-    self.id = self.nodes.keys.sort.join("-")
     self.subgraphs = []
+    sum_in, sum_out = get_k_in_and_sum_k_out
+    self.strength = (sum_out>0 ? sum_in.to_f/sum_out : 0.0)
   end
 
   # Adds subgraph to graph
@@ -41,33 +42,37 @@ class Graph
   #     k_in  is degree of edges in (sub)graph
   #     k_out is degree of edges out of (sub)graph
   def weak_community?
+    sum_in, sum_out = get_k_in_and_sum_k_out
+    sum_in > sum_out
+  end
+
+  # Retrieves community nodes for given graph
+  def community_nodes
+    community_nodes = []
+    community_nodes += self.nodes.values
+    self.subgraphs.each do |sub|
+      community_nodes += sub.community_nodes
+    end
+    community_nodes
+  end
+
+  def <=>(subgraph)
+    Set.new(self.nodes.keys) <=> Set.new(subgraph.nodes.keys)
+  end
+
+  def ==(subgraph)
+    Set.new(self.nodes.keys) == Set.new(subgraph.nodes.keys)
+  end
+
+  private
+
+  def get_k_in_and_sum_k_out
     sum_in = 0
     sum_out = 0
     self.nodes.each do |n_id, n|
       sum_in += SocialNetworkAnalyser.indegree_centrality(self, n_id) + SocialNetworkAnalyser.outdegree_centrality(self, n_id)
       sum_out += n.k_out
     end
-    sum_in > sum_out
-  end
-
-  # Retrieves community nodes for given graph
-  def community_nodes
-    cn = []
-    if self.nodes.empty? && !self.subgraphs.empty?
-      self.subgraphs.each do |s|
-        cn += s.community_nodes
-      end
-      cn
-    else
-      self.nodes.values
-    end
-  end
-
-  def <=>(subgraph)
-    self.id <=> subgraph.id
-  end
-
-  def ==(subgraph)
-    self.id == subgraph.id
+    [sum_in, sum_out]
   end
 end
