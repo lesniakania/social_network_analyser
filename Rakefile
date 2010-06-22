@@ -2,7 +2,7 @@ require 'config/init.rb'
 
 spec = Gem::Specification.new do |s|
   s.name = 'social_network_analyser'
-  s.version = '0.1.2'
+  s.version = '0.1.2.4'
   s.has_rdoc = true
   s.extra_rdoc_files = ['README.markdown', 'LICENSE']
   s.summary = 'provides useful functions to analize social networks'
