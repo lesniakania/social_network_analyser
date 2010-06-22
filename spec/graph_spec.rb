@@ -46,5 +46,27 @@ describe Graph do
     @subgraph012.community_nodes.map { |n| n.id }.sort.should == [0, 1, 2]
     @subgraph345.community_nodes.map { |n| n.id }.sort.should == [3, 4, 5]
   end
+
+  it "should cutoff cummunities properly" do
+    root = Graph.new([], [], true)
+    root.strength = 0
+    parent = Graph.new([], [])
+    parent.strength = 66
+    root.subgraphs << parent
+    graph = Graph.new([], [])
+    graph.strength = 77
+    root.subgraphs << graph
+    graphs = [
+      Graph.new([], []),
+      Graph.new([], []),
+      Graph.new([], [])
+    ]
+    graphs[0].strength = 45
+    graphs[1].strength = 40
+    graphs[2].strength = 35
+
+    graphs.each { |g| parent.subgraphs << g }
+    Graph.cutoff(root, 50).sort { |g2, g1| g1.strength <=> g2.strength }.should == graphs
+  end
 end
 

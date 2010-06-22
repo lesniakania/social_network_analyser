@@ -1,9 +1,10 @@
 require 'social_network_analyser'
 
 class Graph
-  attr_accessor :id, :nodes, :edges, :subgraphs, :strength
+  attr_accessor :id, :nodes, :edges, :subgraphs, :strength, :density, :root
 
-  def initialize(nodes, edges)
+  def initialize(nodes, edges, root=false)
+    self.root = root
     self.nodes = {}
     nodes.each do |n|
       self.nodes[n.id] = n
@@ -14,7 +15,12 @@ class Graph
     end
     self.subgraphs = []
     sum_in, sum_out = get_k_in_and_sum_k_out
-    self.strength = (sum_out>0 ? sum_in.to_f/sum_out : 0.0)
+    self.strength = (sum_out>0 ? (sum_in.to_f/(sum_in.to_f+sum_out))*100 : 0.0)
+    self.density = sum_in
+  end
+
+  def root?
+    self.root
   end
 
   # Adds subgraph to graph
@@ -62,6 +68,18 @@ class Graph
 
   def ==(subgraph)
     Set.new(self.nodes.keys) == Set.new(subgraph.nodes.keys)
+  end
+
+  def self.cutoff(graph, min_strength)
+    graphs = []
+    if !graph.root? && graph.strength<=min_strength
+      graphs << graph
+    else
+      graph.subgraphs.each do |sub|
+        graphs += cutoff(sub, min_strength)
+      end
+    end
+    graphs
   end
 
   private
